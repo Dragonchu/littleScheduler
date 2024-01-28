@@ -124,7 +124,7 @@ public class ScheduleFrame extends JFrame {
         contentJPanel.add(memorylistPane);
         memorylistPane.setBounds(600, 20, 100, 500);
         memoryJlist.setListData(memory_list);
-        memorycolor(memoryJlist);
+        memoryColor(memoryJlist);
 
         //前驱选择列表
         JComboBox<String> existComboBox = new JComboBox<String>();
@@ -135,32 +135,20 @@ public class ScheduleFrame extends JFrame {
         JButton resetButton = new JButton("重置");
         contentJPanel.add(resetButton);
         resetButton.setBounds(2, 500, 100, 30);
-        resetButton.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reset = true;
-
-
-            }
-        });
+        resetButton.addActionListener(e -> reset = true);
 
         //新建进程按钮
         JButton buildButton = new JButton("添加进程");
         contentJPanel.add(buildButton);
         buildButton.setBounds(2, 85, 100, 30);
-        buildButton.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                addIntoReady(newpcb(nameArea, priorityJTextField, timeArea, memoryTextField), readyJList, waitJList);
-                //把ready队列显示出来
-                ShowList.show(readyJList, ready_list);
-                //把wait队列显示出来
-                ShowList.show(waitJList, wait_list);
-                //在前驱列表中添加进程
-                existComboBox.addItem(nameArea.getText());
-            }
+        buildButton.addActionListener(e -> {
+            addIntoReady(newpcb(nameArea, priorityJTextField, timeArea, memoryTextField));
+            //把ready队列显示出来
+            ShowList.show(readyJList, ready_list);
+            //把wait队列显示出来
+            ShowList.show(waitJList, wait_list);
+            //在前驱列表中添加进程
+            existComboBox.addItem(nameArea.getText());
         });
 
         //显示运行队列
@@ -200,17 +188,13 @@ public class ScheduleFrame extends JFrame {
         JButton addsynJButton = new JButton("添加前驱");
         contentJPanel.add(addsynJButton);
         addsynJButton.setBounds(2, 320, 100, 30);
-        addsynJButton.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Semaphore tempSemaphore = new Semaphore();
-                tempSemaphore.setPredone(0);
-                tempSemaphore.setPrecursor(existComboBox.getSelectedItem().toString());
-                tempSemaphore.setSubsequent(nameArea.getText());
-                System.out.println("添加信号量:" + tempSemaphore.getPrecursor() + " " + tempSemaphore.getSubsequent() + " " + tempSemaphore.getPredone());
-                synVector.add(tempSemaphore);
-            }
+        addsynJButton.addActionListener(e -> {
+            Semaphore tempSemaphore = new Semaphore();
+            tempSemaphore.setPredone(0);
+            tempSemaphore.setPrecursor(existComboBox.getSelectedItem().toString());
+            tempSemaphore.setSubsequent(nameArea.getText());
+            System.out.println("添加信号量:" + tempSemaphore.getPrecursor() + " " + tempSemaphore.getSubsequent() + " " + tempSemaphore.getPredone());
+            synVector.add(tempSemaphore);
         });
 
         //挂起按钮
@@ -240,180 +224,165 @@ public class ScheduleFrame extends JFrame {
         JButton dissuspendButton = new JButton("解挂");
         contentJPanel.add(dissuspendButton);
         dissuspendButton.setBounds(2, 240, 100, 30);
-        dissuspendButton.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("开始解挂");
-                for (int i = 0; i < suspend_list.size(); i++) {
-//					System.out.println("查找");
-//					System.out.println(suspend_list.get(i).getName());
-//					System.out.println(suspendComboBox.getSelectedItem().toString());
-                    if (suspend_list.get(i).getName() == suspendComboBox.getSelectedItem().toString()) {
-                        System.out.println("找到");
-                        if (ready_list.size() < CHANNEL) {
-                            ready_list.add(suspend_list.get(i));
-                            MyComparator.priority_sort(ready_list);
-                        } else {
-                            wait_list.add(suspend_list.get(i));
-                        }
-                        suspend_list.remove(i);
+        dissuspendButton.addActionListener(e -> {
+            System.out.println("开始解挂");
+            for (int i = 0; i < suspend_list.size(); i++) {
+                if (suspend_list.get(i).getName() == suspendComboBox.getSelectedItem().toString()) {
+                    System.out.println("找到");
+                    if (ready_list.size() < CHANNEL) {
+                        ready_list.add(suspend_list.get(i));
+                        MyComparator.priority_sort(ready_list);
+                    } else {
+                        wait_list.add(suspend_list.get(i));
                     }
+                    suspend_list.remove(i);
                 }
-//				System.out.println("结束");
-                suspendComboBox.removeItem(suspendComboBox.getSelectedItem());
-                refreshAllList(runningJList, readyJList, waitJList, suspendJList);
             }
+            suspendComboBox.removeItem(suspendComboBox.getSelectedItem());
+            refreshAllList(runningJList, readyJList, waitJList, suspendJList);
         });
 
         //进程运行按钮
         JButton runningButton = new JButton("运行");
         contentJPanel.add(runningButton);
         runningButton.setBounds(2, 120, 100, 30);
-        runningButton.addActionListener(new ActionListener() {
+        runningButton.addActionListener(e -> new Thread() {
+            public synchronized void run() {
+                int timeleft = TIME_SLICE;
+                while (true) {
+                    if (reset == true) {
+                        break;
+                    }
+                    if (multBox.isSelected() && running_list2.size() < 1) {
+                        if (!ready_list.isEmpty()) {
+                            running_list2.add(ready_list.firstElement());
+                            ready_list.remove(0);
+                        }
 
-            public void actionPerformed(ActionEvent e) {
-
-                new Thread() {
-                    public synchronized void run() {
-                        int timeleft = TIME_SLICE;
-                        while (true) {
-                            if (reset == true) {
-                                break;
-                            }
-                            if (multBox.isSelected() && running_list2.size() < 1) {
-                                if (!ready_list.isEmpty()) {
-                                    running_list2.add(ready_list.firstElement());
-                                    ready_list.remove(0);
-                                }
-
-                                ShowList.show(runningJList2, running_list2);
-                            }
-                            if (!running_list2.isEmpty()) {
-                                checksynsub();
-                                if (tempcheck == 1) {
-                                    //程序在运行中，该程序不为最后一个程序
-                                    running_list2.firstElement().processRun();
-                                    try {
-                                        sleep(1000);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-
-                                if (running_list2.firstElement().getTime() == 0) {
-                                    setsynpredone(running_list);
-                                    Backmemory(memoryJlist, running_list2);
-                                    saveblockprocess();
-                                    existComboBox.removeItem(running_list2.firstElement().getName());
-                                    deletesynsub(running_list2);
-                                    running_list2.remove(0);
-                                }
-                                ShowList.show(runningJList2, running_list2);
-                                tempcheck = 1;
-                            }
-
-
-                            if (!running_list.isEmpty()) {
-                                if (!ready_list.isEmpty() && running_list.firstElement().getTime() > 0 && timeleft > 0 && running_list.firstElement().getPriority() >= ready_list.firstElement().getPriority()) {
-                                    checksynsub();
-                                    if (tempcheck == 1) {
-                                        //程序在运行中，该程序不为最后一个程序
-                                        running_list.firstElement().processRun();
-
-                                        timeleft--;
-                                        try {
-                                            sleep(1000);
-                                        } catch (InterruptedException e) {
-                                            e.printStackTrace();
-                                        }
-                                        if (!running_list.isEmpty()) {
-                                            printpcb(running_list.firstElement());
-                                            refreshAllList(runningJList, readyJList, waitJList, suspendJList);
-                                        }
-                                    } else {
-                                        suspend_list.add(running_list.firstElement());
-                                        running_list.remove(0);
-                                    }
-                                    tempcheck = 1;
-                                }
-
-                                //运行进程被抢占
-                                else if (!ready_list.isEmpty() && running_list.firstElement().getPriority() < ready_list.firstElement().getPriority() && running_list.firstElement().getTime() > 0) {
-                                    //后备队列没有进程，running进程加入ready队列
-                                    addIntoReady(running_list.firstElement(), readyJList, waitJList);
-                                    //把running进程移除
-                                    running_list.remove(0);
-                                    //加入优先权最大的进程
-                                    movReadyToRun(memoryJlist);
-                                    timeleft = TIME_SLICE;
-                                    //刷新所有队列
-                                    refreshAllList(runningJList, readyJList, waitJList, suspendJList);
-
-                                } else if (running_list.firstElement().getTime() <= 0 || timeleft <= 0) {
-                                    if (running_list.firstElement().getTime() <= 0) {
-                                        //进程执行完毕且该进程不是最后一个进程
-                                        setsynpredone(running_list);
-                                        Backmemory(memoryJlist, running_list);
-                                        saveblockprocess();
-                                        existComboBox.removeItem(running_list.firstElement().getName());
-                                        deletesynsub(running_list);
-                                    }
-                                    running_list.remove(0);
-                                    if (!ready_list.isEmpty()) {
-                                        movReadyToRun(memoryJlist);
-                                    }
-                                    timeleft = TIME_SLICE;
-                                    //刷新所有队列
-                                    refreshAllList(runningJList, readyJList, waitJList, suspendJList);
-                                } else if (ready_list.isEmpty()) {
-                                    while (!running_list.isEmpty() && running_list.firstElement().getTime() > 0) {
-                                        //最后一个程序不停地运行到结束
-                                        running_list.firstElement().processRun();
-                                        timeleft--;
-                                        try {
-                                            sleep(1000);
-                                        } catch (InterruptedException e) {
-                                            e.printStackTrace();
-                                        }
-                                        if (!running_list.isEmpty()) {
-                                            printpcb(running_list.firstElement());
-                                            refreshAllList(runningJList, readyJList, waitJList, suspendJList);
-                                        }
-
-                                    }
-                                    //进程执行完毕且该进程是最后一个进程
-
-                                    setsynpredone(running_list);
-                                    deletesynsub(running_list);
-                                    if (!running_list.isEmpty()) {
-                                        existComboBox.removeItem(running_list.firstElement().getName());
-                                    }
-
-                                    Backmemory(memoryJlist, running_list);
-                                    if (!running_list.isEmpty()) {
-                                        running_list.remove(0);
-                                        System.out.println("最后一个进程运行结束");
-                                    }
-                                    saveblockprocess();
-                                    refreshAllList(runningJList, readyJList, waitJList, suspendJList);
-                                }
-
-                            } else {
-                                if (ready_list.isEmpty()) {
-
-                                } else {
-                                    movReadyToRun(memoryJlist);
-                                    refreshAllList(runningJList, readyJList, waitJList, suspendJList);
-                                }
+                        ShowList.show(runningJList2, running_list2);
+                    }
+                    if (!running_list2.isEmpty()) {
+                        checksynsub();
+                        if (tempcheck == 1) {
+                            //程序在运行中，该程序不为最后一个程序
+                            running_list2.firstElement().processRun();
+                            try {
+                                sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
                             }
                         }
-                        reset = false;
-                    }
-                }.start();
 
+                        if (running_list2.firstElement().getTime() == 0) {
+                            setsynpredone(running_list);
+                            backMemory(memoryJlist, running_list2);
+                            saveblockprocess();
+                            existComboBox.removeItem(running_list2.firstElement().getName());
+                            deletesynsub(running_list2);
+                            running_list2.remove(0);
+                        }
+                        ShowList.show(runningJList2, running_list2);
+                        tempcheck = 1;
+                    }
+
+
+                    if (!running_list.isEmpty()) {
+                        if (!ready_list.isEmpty() && running_list.firstElement().getTime() > 0 && timeleft > 0 && running_list.firstElement().getPriority() >= ready_list.firstElement().getPriority()) {
+                            checksynsub();
+                            if (tempcheck == 1) {
+                                //程序在运行中，该程序不为最后一个程序
+                                running_list.firstElement().processRun();
+
+                                timeleft--;
+                                try {
+                                    sleep(1000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                if (!running_list.isEmpty()) {
+                                    printpcb(running_list.firstElement());
+                                    refreshAllList(runningJList, readyJList, waitJList, suspendJList);
+                                }
+                            } else {
+                                suspend_list.add(running_list.firstElement());
+                                running_list.remove(0);
+                            }
+                            tempcheck = 1;
+                        }
+
+                        //运行进程被抢占
+                        else if (!ready_list.isEmpty() && running_list.firstElement().getPriority() < ready_list.firstElement().getPriority() && running_list.firstElement().getTime() > 0) {
+                            //后备队列没有进程，running进程加入ready队列
+                            addIntoReady(running_list.firstElement());
+                            //把running进程移除
+                            running_list.remove(0);
+                            //加入优先权最大的进程
+                            movReadyToRun(memoryJlist);
+                            timeleft = TIME_SLICE;
+                            //刷新所有队列
+                            refreshAllList(runningJList, readyJList, waitJList, suspendJList);
+
+                        } else if (running_list.firstElement().getTime() <= 0 || timeleft <= 0) {
+                            if (running_list.firstElement().getTime() <= 0) {
+                                //进程执行完毕且该进程不是最后一个进程
+                                setsynpredone(running_list);
+                                backMemory(memoryJlist, running_list);
+                                saveblockprocess();
+                                existComboBox.removeItem(running_list.firstElement().getName());
+                                deletesynsub(running_list);
+                            }
+                            running_list.remove(0);
+                            if (!ready_list.isEmpty()) {
+                                movReadyToRun(memoryJlist);
+                            }
+                            timeleft = TIME_SLICE;
+                            //刷新所有队列
+                            refreshAllList(runningJList, readyJList, waitJList, suspendJList);
+                        } else if (ready_list.isEmpty()) {
+                            while (!running_list.isEmpty() && running_list.firstElement().getTime() > 0) {
+                                //最后一个程序不停地运行到结束
+                                running_list.firstElement().processRun();
+                                timeleft--;
+                                try {
+                                    sleep(1000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                if (!running_list.isEmpty()) {
+                                    printpcb(running_list.firstElement());
+                                    refreshAllList(runningJList, readyJList, waitJList, suspendJList);
+                                }
+
+                            }
+                            //进程执行完毕且该进程是最后一个进程
+
+                            setsynpredone(running_list);
+                            deletesynsub(running_list);
+                            if (!running_list.isEmpty()) {
+                                existComboBox.removeItem(running_list.firstElement().getName());
+                            }
+
+                            backMemory(memoryJlist, running_list);
+                            if (!running_list.isEmpty()) {
+                                running_list.remove(0);
+                                System.out.println("最后一个进程运行结束");
+                            }
+                            saveblockprocess();
+                            refreshAllList(runningJList, readyJList, waitJList, suspendJList);
+                        }
+
+                    } else {
+                        if (ready_list.isEmpty()) {
+
+                        } else {
+                            movReadyToRun(memoryJlist);
+                            refreshAllList(runningJList, readyJList, waitJList, suspendJList);
+                        }
+                    }
+                }
+                reset = false;
             }
-        });
+        }.start());
 
 
         //将面板添加到frame
@@ -472,7 +441,7 @@ public class ScheduleFrame extends JFrame {
             suspend_list.add(ready_list.firstElement());
             ready_list.remove(0);
         }
-        memorycolor(memoryJlist);
+        memoryColor(memoryJlist);
     }
 
     public void refreshAllList(JList<String> runningJList, JList<String> readyJList, JList<String> waitJList, JList<String> suspendJList) {
@@ -483,7 +452,7 @@ public class ScheduleFrame extends JFrame {
         ShowList.show(suspendJList, suspend_list);
     }
 
-    public void addIntoReady(PCB pcb, JList<String> readyJList, JList<String> waitJList) {
+    public void addIntoReady(PCB pcb) {
         if (ready_list.size() < CHANNEL) {
             //向ready队列中添加新建进程
             ready_list.add(pcb);
@@ -551,7 +520,7 @@ public class ScheduleFrame extends JFrame {
     }
 
 
-    public void memorycolor(JList<String> memoryJlist) {
+    public void memoryColor(JList<String> memoryJlist) {
         memoryJlist.setCellRenderer(new DefaultListCellRenderer() {
             public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
@@ -572,7 +541,7 @@ public class ScheduleFrame extends JFrame {
         });
     }
 
-    public void Backmemory(JList memoryJlist, Vector<PCB> runningList) {
+    public void backMemory(JList memoryJlist, Vector<PCB> runningList) {
         for (int i = 0; i < partiontables_list.size(); i++) {
             if (partiontables_list.get(i).getStartAddress() == runningList.firstElement().getMemoryStartAddress()) {
                 partiontables_list.get(i).setState(1);
@@ -588,6 +557,6 @@ public class ScheduleFrame extends JFrame {
                 }
             }
         }
-        memorycolor(memoryJlist);
+        memoryColor(memoryJlist);
     }
 }
