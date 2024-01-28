@@ -1,4 +1,4 @@
-package littlescheduler.app;
+package littlescheduler.view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -19,15 +19,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import littlescheduler.app.ShowList;
 import littlescheduler.model.PCB;
 import littlescheduler.model.PCBComparator;
 import littlescheduler.model.PartitionTable;
 import littlescheduler.model.Semaphore;
 
-
-//wdnmd这一坨屎山
-public class ScheduleFrame extends JFrame {
-    private static final long serialVersionUID = 2760825274877778046L;
+public class MainFrame extends JFrame {
     private static final int DEFAULT_WIDTH = 800;
     private static final int DEFAULT_HEIGHT = 600;
     private static final int TIME_SLICE = 30;
@@ -44,7 +42,7 @@ public class ScheduleFrame extends JFrame {
     Vector<String> memory_list = new Vector<>();
     boolean reset = false;
 
-    public ScheduleFrame() {
+    public MainFrame() {
         initialpartiontable();
         //设置窗体的基本属性
         this.setTitle("调度控制台");

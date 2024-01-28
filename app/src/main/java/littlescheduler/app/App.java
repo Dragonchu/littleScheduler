@@ -3,8 +3,10 @@
  */
 package littlescheduler.app;
 
+import littlescheduler.view.MainFrame;
+
 public class App {
     public static void main(String[] args) {
-        new ScheduleFrame();
+        new MainFrame();
     }
 }
