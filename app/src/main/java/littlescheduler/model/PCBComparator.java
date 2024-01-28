@@ -1,11 +1,11 @@
-package littlescheduler.app;
+package littlescheduler.model;
 
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
 
-public class MyComparator implements Comparator<PCB> {
+public class PCBComparator implements Comparator<PCB> {
     public int compare(PCB left, PCB right) {
         PCB lPcb = left;
         PCB rpcb = right;
@@ -13,7 +13,7 @@ public class MyComparator implements Comparator<PCB> {
     }
 
     public static void priority_sort(Vector<PCB> list) {
-        Comparator<PCB> ct = new MyComparator();
+        Comparator<PCB> ct = new PCBComparator();
         Collections.sort(list, ct);
     }
 }

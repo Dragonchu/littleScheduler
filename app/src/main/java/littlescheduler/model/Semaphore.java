@@ -1,4 +1,4 @@
-package littlescheduler.app;
+package littlescheduler.model;
 
 import lombok.Data;
 

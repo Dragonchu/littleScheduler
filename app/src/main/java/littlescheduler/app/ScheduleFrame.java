@@ -19,6 +19,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import littlescheduler.model.PCB;
+import littlescheduler.model.PCBComparator;
+import littlescheduler.model.PartitionTable;
+import littlescheduler.model.Semaphore;
 
 
 //wdnmd这一坨屎山
@@ -231,7 +235,7 @@ public class ScheduleFrame extends JFrame {
                     System.out.println("找到");
                     if (ready_list.size() < CHANNEL) {
                         ready_list.add(suspend_list.get(i));
-                        MyComparator.priority_sort(ready_list);
+                        PCBComparator.priority_sort(ready_list);
                     } else {
                         wait_list.add(suspend_list.get(i));
                     }
@@ -433,7 +437,7 @@ public class ScheduleFrame extends JFrame {
                 ready_list.add(wait_list.firstElement());
                 wait_list.remove(0);
                 //对ready队列按优先级排序
-                MyComparator.priority_sort(ready_list);
+                PCBComparator.priority_sort(ready_list);
             }
         } else {
             JOptionPane.showMessageDialog(null, "无可用主存给进程" + ready_list.firstElement().getName(), null, JOptionPane.ERROR_MESSAGE);
@@ -457,7 +461,7 @@ public class ScheduleFrame extends JFrame {
             //向ready队列中添加新建进程
             ready_list.add(pcb);
             //对ready队列排序
-            MyComparator.priority_sort(ready_list);
+            PCBComparator.priority_sort(ready_list);
         } else {
             //将进程加入后备队列
             wait_list.add(pcb);
