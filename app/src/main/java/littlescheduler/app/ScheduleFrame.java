@@ -29,7 +29,7 @@ public class ScheduleFrame extends JFrame {
     private static final int TIME_SLICE = 30;
     private static final int CHANNEL = 2;
     private static int tempcheck = 1;
-    private Vector<semaphore> synVector = new Vector<>();
+    private Vector<Semaphore> synVector = new Vector<>();
 
     Vector<PCB> ready_list = new Vector<PCB>();
     Vector<PCB> running_list = new Vector<PCB>();
@@ -204,11 +204,11 @@ public class ScheduleFrame extends JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                semaphore tempSemaphore = new semaphore();
-                tempSemaphore.setIsPredone(0);
+                Semaphore tempSemaphore = new Semaphore();
+                tempSemaphore.setPredone(0);
                 tempSemaphore.setPrecursor(existComboBox.getSelectedItem().toString());
                 tempSemaphore.setSubsequent(nameArea.getText());
-                System.out.println("添加信号量:" + tempSemaphore.getPrecursor() + " " + tempSemaphore.getSubsequent() + " " + tempSemaphore.getIsPredone());
+                System.out.println("添加信号量:" + tempSemaphore.getPrecursor() + " " + tempSemaphore.getSubsequent() + " " + tempSemaphore.getPredone());
                 synVector.add(tempSemaphore);
             }
         });
@@ -293,7 +293,7 @@ public class ScheduleFrame extends JFrame {
                                 checksynsub();
                                 if (tempcheck == 1) {
                                     //程序在运行中，该程序不为最后一个程序
-                                    running_list2.firstElement().processrun();
+                                    running_list2.firstElement().processRun();
                                     try {
                                         sleep(1000);
                                     } catch (InterruptedException e) {
@@ -319,7 +319,7 @@ public class ScheduleFrame extends JFrame {
                                     checksynsub();
                                     if (tempcheck == 1) {
                                         //程序在运行中，该程序不为最后一个程序
-                                        running_list.firstElement().processrun();
+                                        running_list.firstElement().processRun();
 
                                         timeleft--;
                                         try {
@@ -369,7 +369,7 @@ public class ScheduleFrame extends JFrame {
                                 } else if (ready_list.isEmpty()) {
                                     while (!running_list.isEmpty() && running_list.firstElement().getTime() > 0) {
                                         //最后一个程序不停地运行到结束
-                                        running_list.firstElement().processrun();
+                                        running_list.firstElement().processRun();
                                         timeleft--;
                                         try {
                                             sleep(1000);
@@ -427,8 +427,8 @@ public class ScheduleFrame extends JFrame {
         pcb.setPriority(Integer.parseInt(priorityJTextField.getText()));
         pcb.setState("就绪");
         pcb.setTime(Integer.parseInt(timeArea.getText()));
-        pcb.setMemorysize(Integer.parseInt(memoryJTextField.getText()));
-        System.out.println("新建一个PCB:" + "name:" + pcb.getName() + "priority:" + pcb.getPriority() + "getState:" + pcb.getState() + "time:" + pcb.getTime() + "memory:" + pcb.getMemorysize());
+        pcb.setMemorySize(Integer.parseInt(memoryJTextField.getText()));
+        System.out.println("新建一个PCB:" + "name:" + pcb.getName() + "priority:" + pcb.getPriority() + "getState:" + pcb.getState() + "time:" + pcb.getTime() + "memory:" + pcb.getMemorySize());
         return pcb;
     }
 
@@ -438,14 +438,14 @@ public class ScheduleFrame extends JFrame {
 
     public void movReadyToRun(JList<String> memoryJlist) {
         int temp = 0;
-        if (!ready_list.isEmpty() && ready_list.firstElement().getMemory_start_address() < 0) {
+        if (!ready_list.isEmpty() && ready_list.firstElement().getMemoryStartAddress() < 0) {
             for (int i = 0; i < partiontables_list.size(); i++) {
-                if ((partiontables_list.get(i).getState() == 1) && partiontables_list.get(i).getSize() > ready_list.firstElement().getMemorysize()) {
-                    ready_list.firstElement().setMemory_start_address(partiontables_list.get(i).getStartAddress());
+                if ((partiontables_list.get(i).getState() == 1) && partiontables_list.get(i).getSize() > ready_list.firstElement().getMemorySize()) {
+                    ready_list.firstElement().setMemoryStartAddress(partiontables_list.get(i).getStartAddress());
                     //剩下的可用分区
-                    partiontables_list.add(i + 1, new PartitionTable(partiontables_list.get(i).getNumber(), partiontables_list.get(i).getSize() - ready_list.firstElement().getMemorysize(), partiontables_list.get(i).getStartAddress() + ready_list.firstElement().getMemorysize(), 1));
+                    partiontables_list.add(i + 1, new PartitionTable(partiontables_list.get(i).getNumber(), partiontables_list.get(i).getSize() - ready_list.firstElement().getMemorySize(), partiontables_list.get(i).getStartAddress() + ready_list.firstElement().getMemorySize(), 1));
                     //被分配的分区
-                    partiontables_list.get(i).setSize(ready_list.firstElement().getMemorysize());
+                    partiontables_list.get(i).setSize(ready_list.firstElement().getMemorySize());
                     partiontables_list.get(i).setStartAddress(partiontables_list.get(i).getStartAddress());
                     partiontables_list.get(i).setState(0);
                     temp = 1;
@@ -454,7 +454,7 @@ public class ScheduleFrame extends JFrame {
             }
         }
 
-        if (temp == 1 || ready_list.firstElement().getMemory_start_address() >= 0) {
+        if (temp == 1 || ready_list.firstElement().getMemoryStartAddress() >= 0) {
             //把ready队列队首的元素移动到running队列
             running_list.add(ready_list.firstElement());
             ready_list.remove(0);
@@ -500,7 +500,7 @@ public class ScheduleFrame extends JFrame {
     public void checksynsub() {
         for (int i = 0; i < synVector.size(); i++) {
             if (synVector.get(i).getSubsequent().equals(running_list.firstElement().getName())) {
-                tempcheck = tempcheck * synVector.get(i).getIsPredone();
+                tempcheck = tempcheck * synVector.get(i).getPredone();
             }
         }
     }
@@ -519,7 +519,7 @@ public class ScheduleFrame extends JFrame {
         //查找同步队列
         for (int i = 0; i < synVector.size(); i++) {
             if (!runningList.isEmpty() && synVector.get(i).getPrecursor().equals(runningList.firstElement().getName())) {
-                synVector.get(i).setIsPredone(1);
+                synVector.get(i).setPredone(1);
             }
         }
     }
@@ -531,7 +531,7 @@ public class ScheduleFrame extends JFrame {
             int j = 0;
             for (j = 0; j < synVector.size(); j++) {
                 if (suspend_list.get(i).getName().equals(synVector.get(j).getSubsequent())) {
-                    temp = temp * synVector.get(j).getIsPredone();
+                    temp = temp * synVector.get(j).getPredone();
                 }
             }
             if (temp == 1) {
@@ -574,7 +574,7 @@ public class ScheduleFrame extends JFrame {
 
     public void Backmemory(JList memoryJlist, Vector<PCB> runningList) {
         for (int i = 0; i < partiontables_list.size(); i++) {
-            if (partiontables_list.get(i).getStartAddress() == runningList.firstElement().getMemory_start_address()) {
+            if (partiontables_list.get(i).getStartAddress() == runningList.firstElement().getMemoryStartAddress()) {
                 partiontables_list.get(i).setState(1);
             }
         }
